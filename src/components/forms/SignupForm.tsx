@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router';
 import type { SignupFormData, FormErrors } from '../../types/auth';
 import { validateSignupForm, hasFormErrors } from '../../utils/validator';
 import { signupUser, sendVerificationEmailTo } from '../../services/authservice';
-import { TextInput, PasswordInput } from '../../common/Inputs';
+import { FormInput } from '../../common/FormInput';
 
 export interface SignupFormProps {
   onSignupSuccess?: (message: string) => void;
@@ -81,11 +81,10 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
       const response = await signupUser(formData);
 
       if (response.success) {
-        // Success callback
+        // Success - verification email was sent
         const message = response.message || 'Signup successful!';
         onSignupSuccess?.(message);
-        setVerificationSent(true);
-
+        
         // Preserve email shown in success message before clearing form
         setSignedUpEmail(formData.email);
 
@@ -97,18 +96,21 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
           confirmationMotDePasse: '',
         });
         setErrors({});
-
-        // Do not redirect aggressively; show confirmation UI
+        
+        // Only set verification sent AFTER successful response
+        setVerificationSent(true);
       } else {
-        // Error from Firebase
-        const errorMessage = response.error || 'Signup failed. Please try again.';
+        // Error from Firebase - email verification failed or signup failed
+        const errorMessage = response.error || 'Échec de l\'inscription. Veuillez réessayer.';
         setApiError(errorMessage);
         onSignupError?.(errorMessage);
+        setVerificationSent(false);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur inattendue s\'est produite';
       setApiError(errorMessage);
       onSignupError?.(errorMessage);
+      setVerificationSent(false);
     } finally {
       setIsLoading(false);
     }
@@ -116,22 +118,37 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
 
   return (
     verificationSent ? (
-      <div className="w-full bg-[#E5EEE5] border border-white/30 rounded-xl p-6 text-center animate-fade-in">
-        <div className="flex justify-center mb-3">
-          <svg className="w-10 h-10 text-[#034C53]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m8 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+      <div className="w-full bg-[#E5EEE5] border border-[#034C53]/20 rounded-xl p-6 text-center animate-fade-in">
+        <div className="flex justify-center mb-4">
+          <svg className="w-12 h-12 text-[#034C53]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h2 className="text-lg font-merriweather text-[#034C53] mb-2">Vérification requise</h2>
-        <p className="text-sm text-gray-700 font-inter">
-          Un email de vérification a été envoyé à <span className="font-semibold">{signedUpEmail || formData.email || 'votre adresse'}</span>. Veuillez vérifier votre boîte mail avant de vous connecter.
+        <h2 className="text-lg font-bold font-merriweather text-[#034C53] mb-3">Email de vérification envoyé !</h2>
+        <p className="text-sm text-[#034C53] dark:text-white font-inter mb-2">
+          Un email de vérification a été envoyé à <span className="font-semibold text-[#034C53] dark:text-white">{signedUpEmail}</span>.
         </p>
-        <p className="text-xs text-gray-500 mt-2">Si vous ne voyez pas l'email, vérifiez le dossier spam.</p>
+        <p className="text-xs text-[#034C53] dark:text-white font-inter">
+          Veuillez vérifier votre boîte mail et cliquer sur le lien de vérification.
+        </p>
+        <p className="text-xs text-[#034C53]/70 dark:text-white/70 mt-2 italic">Si vous ne voyez pas l'email, vérifiez le dossier spam ou courrier indésirable.</p>
+        
         {resendMessage && (
-          <p className="text-xs mt-2 text-[#005F63]">{resendMessage}</p>
+          <div className={`mt-3 p-2 rounded-md text-xs font-medium ${
+            resendMessage.includes('succès') ? 'bg-[#E5EEE5] text-[#034C53]' : 'bg-[#FFC1B4]/30 text-[#F38C79]'
+          }`}>
+            {resendMessage}
+          </div>
         )}
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <a href="/login" className="inline-block px-4 py-2.5 rounded-md bg-[#F38C79] text-white text-sm font-semibold hover:bg-[#E07A66]">Aller à la connexion</a>
+        
+        <div className="mt-6 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="w-full px-4 py-2.5 rounded-md bg-[#F38C79] text-white text-sm font-semibold transition-all hover:bg-[#E07A66]"
+          >
+            Aller à la page Login
+          </button>
           <button
             type="button"
             onClick={async () => {
@@ -141,11 +158,25 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
               setResendLoading(false);
               setResendMessage(ok ? 'Email de vérification renvoyé avec succès.' : 'Échec de renvoi de l\'email. Assurez-vous d\'être connecté, puis réessayez.');
             }}
-            className={`inline-block px-4 py-2.5 rounded-md border text-sm font-semibold transition-colors ${resendLoading ? 'border-[#007074]/40 text-[#007074]/40 cursor-not-allowed' : 'border-[#007074] text-[#007074] hover:bg-[#007074] hover:text-white'}`}
             disabled={resendLoading}
+            className={`w-full px-4 py-2.5 rounded-md border-2 text-sm font-semibold transition-all ${
+              resendLoading 
+                ? 'border-[#007074]/40 text-[#007074]/40 cursor-not-allowed' 
+                : 'border-[#007074] text-[#007074] hover:bg-[#007074] hover:text-white'
+            }`}
             aria-busy={resendLoading}
           >
-            {resendLoading ? 'Renvoi…' : 'Renvoyer l\'email'}
+            {resendLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Renvoi en cours...
+              </span>
+            ) : (
+              'Renvoyer l\'email de vérification'
+            )}
           </button>
         </div>
       </div>
@@ -154,7 +185,7 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
       {/* API Error Alert */}
       {apiError && (
         <div
-          className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-xs animate-fade-in"
+          className="p-3 bg-[#FFC1B4]/30 dark:bg-[#FFC1B4]/20 border border-[#F38C79] rounded-md text-[#F38C79] dark:text-[#E07A66] text-xs animate-fade-in"
           role="alert"
         >
           <div className="flex items-start">
@@ -175,62 +206,57 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
       )}
 
       {/* Nom Field */}
-      <TextInput
+      <FormInput
         id="nom"
-        name="nom"
+        label="Nom Complet"
         type="text"
-        label="Full Name"
-        placeholder="John Doe"
+        placeholder="Jean Dupont"
         value={formData.nom}
-        onChange={handleInputChange}
-        error={errors.nom}
-        required
+        onChange={(e) => handleInputChange({ target: { name: 'nom', value: e.target.value } } as any)}
+        state={errors.nom ? 'error' : 'default'}
+        message={errors.nom}
         disabled={isLoading}
-        autoComplete="name"
       />
 
       {/* Email Field */}
-      <TextInput
+      <FormInput
         id="email"
-        name="email"
+        label="Adresse Email"
         type="email"
-        label="Email Address"
-        placeholder="your.email@example.com"
+        placeholder="votre.email@example.com"
         value={formData.email}
-        onChange={handleInputChange}
-        error={errors.email}
-        required
+        onChange={(e) => handleInputChange({ target: { name: 'email', value: e.target.value } } as any)}
+        state={errors.email ? 'error' : 'default'}
+        message={errors.email}
         disabled={isLoading}
-        autoComplete="email"
       />
 
       {/* Password Field */}
-      <PasswordInput
+      <FormInput
         id="motDePasse"
-        name="motDePasse"
-        label="Password"
-        placeholder="Enter a strong password"
+        label="Mot de passe"
+        type="password"
+        placeholder="Entrez un mot de passe sécurisé"
         value={formData.motDePasse}
-        onChange={handleInputChange}
-        error={errors.motDePasse}
-        required
+        onChange={(e) => handleInputChange({ target: { name: 'motDePasse', value: e.target.value } } as any)}
+        state={errors.motDePasse ? 'error' : 'default'}
+        message={errors.motDePasse}
         disabled={isLoading}
-        autoComplete="new-password"
-        helperText="At least 8 characters, with uppercase, lowercase, and number"
+        enablePasswordToggle
       />
 
       {/* Password Confirmation Field */}
-      <PasswordInput
+      <FormInput
         id="confirmationMotDePasse"
-        name="confirmationMotDePasse"
-        label="Confirm Password"
-        placeholder="Confirm your password"
+        label="Confirmer le mot de passe"
+        type="password"
+        placeholder="Confirmez votre mot de passe"
         value={formData.confirmationMotDePasse}
-        onChange={handleInputChange}
-        error={errors.confirmationMotDePasse}
-        required
+        onChange={(e) => handleInputChange({ target: { name: 'confirmationMotDePasse', value: e.target.value } } as any)}
+        state={errors.confirmationMotDePasse ? 'error' : 'default'}
+        message={errors.confirmationMotDePasse}
         disabled={isLoading}
-        autoComplete="new-password"
+        enablePasswordToggle
       />
 
       {/* Submit Button */}
@@ -277,11 +303,11 @@ export const SignupForm = ({ onSignupSuccess, onSignupError }: SignupFormProps) 
       </button>
 
       {/* Login Link */}
-      <p className="text-center text-xs text-gray-600 font-inter">
+      <p className="text-center text-xs text-[#034C53] dark:text-white font-inter">
         Already have an account?{' '}
         <a
           href="/login"
-          className="text-[#034C53] font-semibold hover:text-[#005F63] transition-colors"
+          className="text-[#007074] font-semibold hover:text-[#005F63] transition-colors"
         >
           Log in
         </a>
