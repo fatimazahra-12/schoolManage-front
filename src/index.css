@@ -18,6 +18,72 @@ body {
   @apply m-0 min-h-screen bg-[#E5EEE5] text-[#034C53] antialiased;
 }
 
+/* Dark mode overrides when body has .dark-mode */
+body.dark-mode {
+  background-color: #0b1624;
+  color: #e2e8f0;
+}
+
+body.dark-mode .app-shell {
+  background-color: #0b1624;
+  color: #e2e8f0;
+}
+
+body.dark-mode .app-main {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+body.dark-mode .app-navbar,
+body.dark-mode .app-sidebar,
+body.dark-mode .app-footer {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border-color: #1e293b;
+}
+
+body.dark-mode .app-navbar button,
+body.dark-mode .app-sidebar button,
+body.dark-mode .app-footer a,
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  color: #e2e8f0;
+  border-color: #1e293b;
+}
+
+body.dark-mode input {
+  background-color: #1e293b;
+}
+
+body.dark-mode a:hover,
+body.dark-mode button:hover {
+  color: #f38c79;
+}
+
+/* Dropdown panels in dark mode */
+body.dark-mode .dropdown-panel {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .dropdown-title,
+body.dark-mode .dropdown-text {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .dropdown-item:hover {
+  background-color: #334155 !important;
+}
+
+body.dark-mode .dropdown-divider {
+  border-color: #334155 !important;
+}
+
+body.dark-mode .dropdown-divider > div {
+  border-color: #334155 !important;
+}
+
 a {
   @apply text-[#007074] hover:text-[#005F63];
 }
@@ -25,4 +91,13 @@ a {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Merriweather', serif;
   color: #034C53;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+  color: #e2e8f0;
 }

@@ -15,7 +15,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 	]
 
 	return (
-		<header className="sticky top-0 z-50 border-b border-neutral-ivory bg-white/95 backdrop-blur">
+		<header className="app-navbar sticky top-0 z-50 border-b border-neutral-ivory bg-white/95 backdrop-blur">
 			<div className="flex items-center justify-between px-4 py-3 sm:px-8">
 				<div className="flex items-center gap-3">
 					<button
@@ -28,7 +28,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 						</svg>
 					</button>
 
-					<form className="relative hidden md:block" role="search">
+					<form className="relative" role="search">
 						<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
 							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4 text-teal-medium" strokeWidth="2">
 								<circle cx="11" cy="11" r="8" />
@@ -37,13 +37,13 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 						</div>
 						<input
 							type="search"
-							placeholder="Search students, teachers..."
-							className="w-64 rounded-full border border-neutral-ivory bg-neutral-sage py-2 pl-9 pr-12 text-sm text-teal-deep placeholder-teal-medium transition focus:border-coral focus:bg-white focus:outline-none focus:ring-2 focus:ring-coral-light"
+							placeholder="Search..."
+							className="w-32 sm:w-48 md:w-64 rounded-full border border-neutral-ivory bg-neutral-sage py-2 pl-9 pr-10 text-sm text-teal-deep placeholder-teal-medium transition focus:border-coral focus:bg-white focus:outline-none focus:ring-2 focus:ring-coral-light"
 							aria-label="Search"
 						/>
 						<button
 							type="submit"
-							className="absolute inset-y-0 right-1 inline-flex items-center justify-center rounded-full px-3 text-teal-medium hover:text-teal-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
+							className="absolute inset-y-0 right-1 inline-flex items-center justify-center rounded-full px-2 sm:px-3 text-teal-medium hover:text-teal-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
 							aria-label="Run search"
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2">
@@ -56,9 +56,9 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 
 				<div className="flex-1" />
 
-				<div className="flex items-center gap-3 sm:gap-4">
+				<div className="flex items-center gap-2 sm:gap-3 md:gap-4">
 					<button
-						className="hidden h-10 w-10 items-center justify-center rounded-full border border-neutral-ivory text-teal-medium transition hover:border-coral hover:text-coral sm:inline-flex"
+						className="h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-full border border-neutral-ivory text-teal-medium transition hover:border-coral hover:text-coral"
 						aria-label="Chat"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5" strokeWidth="1.5">
@@ -66,10 +66,10 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 							<path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9l-4 3v-3H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
 						</svg>
 					</button>
-					<div className="relative hidden sm:block">
+					<div className="relative">
 						<button
 							onClick={() => setNotifOpen((prev) => !prev)}
-							className="h-10 w-10 items-center justify-center rounded-full border border-neutral-ivory text-teal-medium transition hover:border-coral hover:text-coral sm:inline-flex"
+							className="h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-full border border-neutral-ivory text-teal-medium transition hover:border-coral hover:text-coral"
 							aria-label="Notifications"
 						>
 							<span className="absolute right-1 top-1 inline-flex h-2.5 w-2.5 rounded-full bg-coral" />
@@ -79,20 +79,20 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 							</svg>
 						</button>
 						{notifOpen && (
-							<div className="absolute right-0 mt-2 w-80 rounded-xl border border-neutral-ivory bg-white shadow-xl">
+							<div className="dropdown-panel absolute right-0 mt-2 w-80 rounded-xl border border-neutral-ivory bg-white shadow-xl">
 								<div className="flex items-center justify-between px-4 py-3">
-									<p className="text-sm font-semibold text-teal-deep">Notifications</p>
+									<p className="dropdown-title text-sm font-semibold text-teal-deep">Notifications</p>
 									<span className="rounded-full bg-coral-light px-2 py-1 text-[11px] font-semibold text-coral">{notifications.length} new</span>
 								</div>
-								<div className="divide-y divide-neutral-ivory">
+								<div className="dropdown-divider divide-y divide-neutral-ivory">
 									{notifications.map((note) => (
-										<div key={note.title} className="flex items-start gap-3 px-4 py-3 hover:bg-neutral-sage">
+										<div key={note.title} className="dropdown-item flex items-start gap-3 px-4 py-3 hover:bg-neutral-sage">
 											<div className="mt-1 h-2 w-2 rounded-full bg-coral" />
 											<div className="flex-1">
-												<p className="text-sm font-semibold text-teal-deep">{note.title}</p>
-												<p className="text-xs text-teal-medium">{note.desc}</p>
+												<p className="dropdown-text text-sm font-semibold text-teal-deep">{note.title}</p>
+												<p className="dropdown-text text-xs text-teal-medium">{note.desc}</p>
 											</div>
-											<p className="text-[11px] font-semibold text-teal-medium">{note.time}</p>
+											<p className="dropdown-text text-[11px] font-semibold text-teal-medium">{note.time}</p>
 										</div>
 									))}
 								</div>
@@ -112,22 +112,19 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 							</div>
 						</button>
 						{profileOpen && (
-							<div className="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-ivory bg-white shadow-lg">
+							<div className="dropdown-panel absolute right-0 mt-2 w-48 rounded-xl border border-neutral-ivory bg-white shadow-lg">
 								<div className="px-4 py-3 text-sm text-teal-medium">
-									<p className="font-semibold text-teal-deep">Lakshay Dhoundiyal</p>
-									<p className="text-xs text-teal-medium">info@company.com</p>
+									<p className="dropdown-text font-semibold text-teal-deep">Lakshay Dhoundiyal</p>
+									<p className="dropdown-text text-xs text-teal-medium">info@company.com</p>
 								</div>
-								<div className="border-t border-neutral-ivory text-sm text-teal-deep">
-									<button className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-sage">
-										<span>👤</span>
-										<span>Profile</span>
+								<div className="dropdown-divider border-t border-neutral-ivory text-sm text-teal-deep">
+									<button className="dropdown-item flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-sage">
+										<span className="dropdown-text">Profile</span>
 									</button>
-									<button className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-sage">
-										<span>⚙️</span>
-										<span>Settings</span>
+									<button className="dropdown-item flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-sage">
+										<span className="dropdown-text">Settings</span>
 									</button>
-									<button className="flex w-full items-center gap-2 px-4 py-3 text-left text-coral hover:bg-neutral-sage">
-										<span>🚪</span>
+									<button className="dropdown-item flex w-full items-center gap-2 px-4 py-3 text-left text-coral hover:bg-neutral-sage">
 										<span>Logout</span>
 									</button>
 								</div>

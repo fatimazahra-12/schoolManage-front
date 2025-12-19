@@ -1,4 +1,4 @@
-import React from 'react'
+import { useEffect, useState } from 'react'
 
 type SidebarProps = {
 	open: boolean
@@ -136,12 +136,34 @@ const iconMap: Record<string, React.ReactElement> = {
 }
 
 const Sidebar = ({ open }: SidebarProps) => {
+	const [isDark, setIsDark] = useState(false)
+
+	const applyTheme = (nextDark: boolean) => {
+		setIsDark(nextDark)
+		if (typeof document !== 'undefined') {
+			document.body.classList.toggle('dark-mode', nextDark)
+		}
+		localStorage.setItem('theme', nextDark ? 'dark' : 'light')
+	}
+
+	useEffect(() => {
+		const stored = localStorage.getItem('theme')
+		const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+		const initialDark = stored ? stored === 'dark' : prefersDark
+		applyTheme(initialDark)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	const toggleTheme = () => applyTheme(!isDark)
+
 	return (
 		<>
 			<aside
-				className={`fixed inset-y-0 left-0 z-40 flex flex-col transform border-r border-neutral-ivory bg-white shadow-sm transition-all duration-300 ease-out ${open ? 'w-64' : 'w-20'}`}
+				className={`app-sidebar fixed inset-y-0 left-0 z-40 flex flex-col border-r border-neutral-ivory bg-white shadow-sm transition-all duration-300 ease-out ${
+					open ? 'translate-x-0 w-64 md:w-64 md:translate-x-0' : '-translate-x-full w-64 md:translate-x-0 md:w-20'
+				}`}
 			>
-<div className={`flex items-center py-4 border-b border-neutral-ivory ${open ? 'px-5' : 'justify-center px-2'}`}>
+	<div className={`flex items-center py-4 border-b border-neutral-ivory ${open ? 'px-5' : 'justify-center px-2'}`}>
 				{open ? (
 					<div className="flex items-center gap-3">
 						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-white text-sm font-bold">S</div>
@@ -174,6 +196,29 @@ const Sidebar = ({ open }: SidebarProps) => {
 						</div>
 					))}
 				</nav>
+
+				{/* Theme Toggle Button */}
+				<div className="border-t border-neutral-ivory px-4 py-4">
+					<button
+						onClick={toggleTheme}
+						className={`flex w-full items-center ${open ? 'gap-3 px-3' : 'justify-center px-2'} rounded-lg py-2.5 text-sm font-medium transition text-teal-medium hover:bg-neutral-ivory hover:text-teal-deep`}
+						title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+					>
+						<span className="text-teal-medium">
+							{isDark ? (
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5">
+									<circle cx="12" cy="12" r="4" strokeWidth="1.5" />
+									<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" strokeWidth="1.5" strokeLinecap="round" />
+								</svg>
+							) : (
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5">
+									<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							)}
+						</span>
+						{open && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+					</button>
+				</div>
 			</aside>
 		</>
 	)
