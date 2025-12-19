@@ -10,6 +10,12 @@ export interface SignupFormData {
   confirmationMotDePasse: string;
 }
 
+// Login form data
+export interface LoginFormData {
+  email: string;
+  motDePasse: string;
+}
+
 export interface User {
   uid: string;
   nom: string;

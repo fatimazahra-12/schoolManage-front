@@ -16,10 +16,10 @@ const MIN_NOM_LENGTH = 2;
  */
 export const validateEmail = (email: string): string => {
   if (!email.trim()) {
-    return 'Email is required';
+    return 'L\'adresse email est requise';
   }
   if (!EMAIL_REGEX.test(email)) {
-    return 'Please enter a valid email address';
+    return 'Veuillez entrer une adresse email valide';
   }
   return '';
 };
@@ -31,13 +31,13 @@ export const validateEmail = (email: string): string => {
  */
 export const validateNom = (nom: string): string => {
   if (!nom.trim()) {
-    return 'Full name is required';
+    return 'Le nom complet est requis';
   }
   if (nom.trim().length < MIN_NOM_LENGTH) {
-    return `Name must be at least ${MIN_NOM_LENGTH} characters`;
+    return `Le nom doit contenir au moins ${MIN_NOM_LENGTH} caractères`;
   }
   if (nom.length > 100) {
-    return 'Name must not exceed 100 characters';
+    return 'Le nom ne doit pas dépasser 100 caractères';
   }
   return '';
 };
@@ -49,28 +49,25 @@ export const validateNom = (nom: string): string => {
  */
 export const validatePassword = (password: string): string => {
   if (!password) {
-    return 'Password is required';
+    return 'Le mot de passe est requis';
   }
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+    return `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères`;
   }
   if (password.length > 128) {
-    return 'Password must not exceed 128 characters';
+    return 'Le mot de passe ne doit pas dépasser 128 caractères';
   }
 
-  // Check for at least one uppercase letter
   if (!/[A-Z]/.test(password)) {
-    return 'Password must contain at least one uppercase letter';
+    return 'Le mot de passe doit contenir au moins une lettre majuscule';
   }
 
-  // Check for at least one lowercase letter
   if (!/[a-z]/.test(password)) {
-    return 'Password must contain at least one lowercase letter';
+    return 'Le mot de passe doit contenir au moins une lettre minuscule';
   }
 
-  // Check for at least one number
   if (!/\d/.test(password)) {
-    return 'Password must contain at least one number';
+    return 'Le mot de passe doit contenir au moins un chiffre';
   }
 
   return '';
@@ -87,10 +84,10 @@ export const validatePasswordConfirmation = (
   confirmationPassword: string
 ): string => {
   if (!confirmationPassword) {
-    return 'Password confirmation is required';
+    return 'La confirmation du mot de passe est requise';
   }
   if (password !== confirmationPassword) {
-    return 'Passwords do not match';
+    return 'Les mots de passe ne correspondent pas';
   }
   return '';
 };

@@ -5,12 +5,12 @@
  * Requirements:
  * 1. Install firebase: npm install firebase
  * 2. Add Firebase credentials to .env:
- *    VITE_FIREBASE_API_KEY=...
- *    VITE_FIREBASE_AUTH_DOMAIN=...
- *    VITE_FIREBASE_PROJECT_ID=...
- *    VITE_FIREBASE_STORAGE_BUCKET=...
- *    VITE_FIREBASE_MESSAGING_SENDER_ID=...
- *    VITE_FIREBASE_APP_ID=...
+ *    VITE_API_KEY=...
+ *    VITE_AUTH_DOMAIN=...
+ *    VITE_PROJECT_ID=...
+ *    VITE_STORAGE_BUCKET=...
+ *    VITE_MESSAGING_SENDER_ID=...
+ *    VITE_APP_ID=...
  */
 
 import { initializeApp } from 'firebase/app';
@@ -21,18 +21,23 @@ import {
   signOut,
   updateProfile,
   sendEmailVerification,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
 } from 'firebase/auth';
 import type { User, AuthResponse, SignupFormData } from '../types/auth';
 
 // Firebase configuration (from environment variables)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: import.meta.env.VITE_API_KEY || '',
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_PROJECT_ID || '',
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_APP_ID || '',
 };
+
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -67,17 +72,13 @@ export const signupUser = async (formData: SignupFormData): Promise<AuthResponse
       createdAt: new Date(),
     };
 
-    // Send verification email immediately after signup
     try {
       await sendEmailVerification(firebaseUser);
     } catch (err) {
-      const message = (err as Error)?.message || 'Failed to send verification email';
-      console.error('Verification email error:', err);
-      // Continue signup flow but include a message for the UI
+      const firebaseError = err as { code?: string; message?: string };
       return {
-        success: true,
-        user,
-        message: `Compte créé, mais l'email de vérification n'a pas pu être envoyé: ${message}`,
+        success: false,
+        error: `Compte créé, mais l'email de vérification n'a pas pu être envoyé: ${firebaseError.message || 'Erreur inconnue'}`,
       };
     }
 
@@ -94,24 +95,21 @@ export const signupUser = async (formData: SignupFormData): Promise<AuthResponse
     return {
       success: true,
       user,
-      message: 'Signup successful! Please verify your email.',
+      message: 'Inscription réussie ! Un email de vérification a été envoyé.',
     };
   } catch (error: unknown) {
     const firebaseError = error as { code?: string; message?: string };
-    let errorMessage = 'An error occurred during signup';
+    let errorMessage = 'Une erreur s\'est produite lors de l\'inscription';
 
-    // Handle specific Firebase errors
     if (firebaseError.code === 'auth/email-already-in-use') {
-      errorMessage = 'Email already in use';
+      errorMessage = 'Cet email est déjà utilisé';
     } else if (firebaseError.code === 'auth/weak-password') {
-      errorMessage = 'Password is too weak (min 6 characters)';
+      errorMessage = 'Le mot de passe est trop faible (minimum 6 caractères)';
     } else if (firebaseError.code === 'auth/invalid-email') {
-      errorMessage = 'Invalid email address';
+      errorMessage = 'Adresse email invalide';
     } else if (firebaseError.message) {
       errorMessage = firebaseError.message;
     }
-
-    console.error('Signup error:', firebaseError);
 
     return {
       success: false,
@@ -142,23 +140,21 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
     return {
       success: true,
       user,
-      message: 'Login successful!',
+      message: 'Connexion réussie',
     };
   } catch (error: unknown) {
     const firebaseError = error as { code?: string; message?: string };
-    let errorMessage = 'Login failed';
+    let errorMessage = 'Échec de la connexion';
 
     if (firebaseError.code === 'auth/user-not-found') {
-      errorMessage = 'User not found';
+      errorMessage = 'Utilisateur introuvable';
     } else if (firebaseError.code === 'auth/wrong-password') {
-      errorMessage = 'Invalid password';
+      errorMessage = 'Mot de passe invalide';
     } else if (firebaseError.code === 'auth/invalid-email') {
-      errorMessage = 'Invalid email address';
+      errorMessage = 'Adresse email invalide';
     } else if (firebaseError.message) {
       errorMessage = firebaseError.message;
     }
-
-    console.error('Login error:', firebaseError);
 
     return {
       success: false,
@@ -176,13 +172,13 @@ export const logoutUser = async (): Promise<AuthResponse> => {
     await signOut(auth);
     return {
       success: true,
-      message: 'Logout successful!',
+      message: 'Déconnexion réussie',
     };
   } catch (error: unknown) {
     const firebaseError = error as { message?: string };
     return {
       success: false,
-      error: firebaseError.message || 'Logout failed',
+      error: firebaseError.message || 'Échec de la déconnexion',
     };
   }
 };
@@ -195,10 +191,6 @@ export const getCurrentUser = () => {
   return auth.currentUser;
 };
 
-/**
- * Send a verification email to the currently authenticated user
- * Returns true on success, false on failure
- */
 export const sendVerificationEmailTo = async (): Promise<boolean> => {
   try {
     const current = auth.currentUser;
@@ -206,7 +198,73 @@ export const sendVerificationEmailTo = async (): Promise<boolean> => {
     await sendEmailVerification(current);
     return true;
   } catch (err) {
-    console.error('sendVerificationEmailTo error:', err);
     return false;
+  }
+};
+
+export const sendPasswordResetTo = async (email: string): Promise<AuthResponse> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return {
+      success: true,
+      message: 'Un email de réinitialisation a été envoyé. Vérifiez votre boîte mail et vos spams.',
+    };
+  } catch (error: unknown) {
+    const firebaseError = error as { code?: string; message?: string };
+    let errorMessage = 'Impossible d\'envoyer l\'email de réinitialisation';
+
+    if (firebaseError.code === 'auth/user-not-found') {
+      errorMessage = 'Aucun compte associé à cet email';
+    } else if (firebaseError.code === 'auth/invalid-email') {
+      errorMessage = 'Adresse email invalide';
+    } else if (firebaseError.message) {
+      errorMessage = firebaseError.message;
+    }
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+};
+
+export const verifyResetCode = async (oobCode: string): Promise<AuthResponse> => {
+  try {
+    const email = await verifyPasswordResetCode(auth, oobCode);
+    return {
+      success: true,
+      message: email,
+    };
+  } catch (error: unknown) {
+    const firebaseError = error as { code?: string; message?: string };
+    let errorMessage = 'Lien de réinitialisation invalide ou expiré';
+    if (firebaseError.message) errorMessage = firebaseError.message;
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+};
+
+export const confirmResetPassword = async (oobCode: string, newPassword: string): Promise<AuthResponse> => {
+  try {
+    await confirmPasswordReset(auth, oobCode, newPassword);
+    return {
+      success: true,
+      message: 'Mot de passe réinitialisé avec succès',
+    };
+  } catch (error: unknown) {
+    const firebaseError = error as { code?: string; message?: string };
+    let errorMessage = 'Échec de la réinitialisation du mot de passe';
+    if (firebaseError.code === 'auth/weak-password') {
+      errorMessage = 'Mot de passe trop faible (minimum 6 caractères)';
+    } else if (firebaseError.message) {
+      errorMessage = firebaseError.message;
+    }
+    return {
+      success: false,
+      error: errorMessage,
+    };
   }
 };
