@@ -1,4 +1,6 @@
+import type { JSX } from 'react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 type SidebarProps = {
 	open: boolean
@@ -15,31 +17,12 @@ const sections = [
 			{ label: 'Students', icon: 'students', path: '/etudiant' },
 			{ label: 'Teachers', icon: 'teachers', path: '/enseignant' },
 			{ label: 'Parents', icon: 'parents', path: '/parent' },
-			{ label: 'Staff', icon: 'staff', path: '/staff' },
-		],
-	},
-	{
-		title: 'Academic',
-		items: [
-			{ label: 'Classes', icon: 'classes', path: '/classes' },
-			{ label: 'Subjects', icon: 'subjects', path: '/subjects' },
-			{ label: 'Timetable', icon: 'timetable', path: '/timetable' },
-			{ label: 'Exams', icon: 'exams', path: '/exams' },
-			{ label: 'Results', icon: 'results', path: '/results' },
-		],
-	},
-	{
-		title: 'Activities',
-		items: [
-			{ label: 'Attendance', icon: 'attendance', path: '/attendance' },
-			{ label: 'Assignments', icon: 'assignments', path: '/assignments' },
-			{ label: 'Events', icon: 'events', path: '/events' },
-			{ label: 'Library', icon: 'library', path: '/library' },
+			{ label: 'Salles', icon: 'salles', path: '/salles' },
 		],
 	},
 ]
 
-const iconMap: Record<string, React.ReactElement> = {
+const iconMap: Record<string, JSX.Element> = {
 	dashboard: (
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5">
 			<rect x="3" y="3" width="7" height="7" rx="1" strokeWidth="1.5" />
@@ -67,6 +50,13 @@ const iconMap: Record<string, React.ReactElement> = {
 			<circle cx="15" cy="7" r="2.5" strokeWidth="1.5" />
 			<path d="M4 18c0-2.5 2-4 5-4s5 1.5 5 4" strokeWidth="1.5" />
 			<path d="M10 18c0-2.5 2-4 5-4s5 1.5 5 4" strokeWidth="1.5" />
+		</svg>
+	),
+	salles: (
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5">
+			<rect x="3" y="4" width="18" height="16" rx="2" strokeWidth="1.5" />
+			<path d="M3 10h18M9 4v6M15 4v6" strokeWidth="1.5" />
+			<path d="M7 14h2M12 14h2M17 14h2M7 18h2M12 18h2" strokeWidth="1.5" strokeLinecap="round" />
 		</svg>
 	),
 	staff: (
@@ -136,25 +126,27 @@ const iconMap: Record<string, React.ReactElement> = {
 }
 
 const Sidebar = ({ open }: SidebarProps) => {
-	const [isDark, setIsDark] = useState(false)
+	const navigate = useNavigate()
 
-	const applyTheme = (nextDark: boolean) => {
-		setIsDark(nextDark)
-		if (typeof document !== 'undefined') {
-			document.body.classList.toggle('dark-mode', nextDark)
-		}
-		localStorage.setItem('theme', nextDark ? 'dark' : 'light')
+	const getInitialTheme = () => {
+		const stored = localStorage.getItem('theme')
+		if (stored) return stored === 'dark'
+		return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
 	}
 
-	useEffect(() => {
-		const stored = localStorage.getItem('theme')
-		const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-		const initialDark = stored ? stored === 'dark' : prefersDark
-		applyTheme(initialDark)
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	const [isDark, setIsDark] = useState(getInitialTheme)
 
-	const toggleTheme = () => applyTheme(!isDark)
+	useEffect(() => {
+		document.body.classList.toggle('dark-mode', isDark)
+	}, [isDark])
+
+	const toggleTheme = () => {
+		setIsDark((prev) => {
+			const next = !prev
+			localStorage.setItem('theme', next ? 'dark' : 'light')
+			return next
+		})
+	}
 
 	return (
 		<>
@@ -185,6 +177,8 @@ const Sidebar = ({ open }: SidebarProps) => {
 								{section.items.map((item) => (
 									<button
 										key={item.label}
+										type="button"
+										onClick={() => navigate(item.path)}
 										className={`flex w-full items-center ${open ? 'gap-3 px-3' : 'justify-center px-2'} rounded-lg py-2.5 text-sm font-medium transition text-teal-medium hover:bg-neutral-ivory hover:text-teal-deep`}
 										title={!open ? item.label : undefined}
 									>
@@ -200,6 +194,7 @@ const Sidebar = ({ open }: SidebarProps) => {
 				{/* Theme Toggle Button */}
 				<div className="border-t border-neutral-ivory px-4 py-4">
 					<button
+						type="button"
 						onClick={toggleTheme}
 						className={`flex w-full items-center ${open ? 'gap-3 px-3' : 'justify-center px-2'} rounded-lg py-2.5 text-sm font-medium transition text-teal-medium hover:bg-neutral-ivory hover:text-teal-deep`}
 						title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}

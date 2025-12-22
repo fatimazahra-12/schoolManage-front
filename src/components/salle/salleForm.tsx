@@ -9,29 +9,31 @@ interface SalleFormProps {
 }
 
 const SalleForm = ({ salle, onSubmit, onCancel, loading = false }: SalleFormProps) => {
-  const getInitialFormData = (): CreateSalleDto => {
+  const [formData, setFormData] = useState<CreateSalleDto>({
+    nom: '',
+    capacite: 0,
+    type: 'Cours',
+    disponible: true,
+  });
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
     if (salle) {
-      return {
+      setFormData({
         nom: salle.nom,
         capacite: salle.capacite,
         type: salle.type,
         disponible: salle.disponible,
-      };
+      });
+    } else {
+      setFormData({
+        nom: '',
+        capacite: 0,
+        type: 'Cours',
+        disponible: true,
+      });
     }
-    return {
-      nom: '',
-      capacite: 0,
-      type: 'Cours',
-      disponible: true,
-    };
-  };
-
-  const [formData, setFormData] = useState<CreateSalleDto>(getInitialFormData);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  useEffect(() => {
-    setFormData(getInitialFormData());
-    setErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salle?.id]);
 
